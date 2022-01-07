@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace MinutesCalculator
 {
@@ -11,6 +13,7 @@ namespace MinutesCalculator
             myProgram.realMain();
             //myProgram.test1();
             //myProgram.test2();
+            //myProgram.test3();
 
         }
 
@@ -20,6 +23,7 @@ namespace MinutesCalculator
             int dotsFound; // stores the number of periods found in the input string, which should be 2
             
             string input;
+            string filepath;
             string minuteHolder;
             string secondHolder;
             string msHolder;
@@ -32,33 +36,105 @@ namespace MinutesCalculator
 
             //Console.WriteLine(args[0]); //command line arguments example
             Console.WriteLine("Welcome to minutes calculator.");
-            Console.WriteLine("Enter times in the form of 'xx.yy.zz' (x being minutes, y seconds, z milliseconds).");
-            Console.WriteLine("After each time, hit enter. When done, type 'd', then enter.");
+            Console.WriteLine("Enter 'f' to read times from a file, or 'm' to enter times manually");
+            input = Console.ReadLine();
 
-            running = true;
-            while (running)
+            if (input == "m")
+            { // manual entry selected
+                Console.WriteLine("Enter times in the form of 'xx.yy.zz' (x being minutes, y seconds, z milliseconds).");
+                Console.WriteLine("After each time, hit enter. When done, type 'd', then enter.");
+
+                running = true;
+                while (running)
+                {
+                    dotsFound = 0;
+                    minuteHolder = "";
+                    secondHolder = "";
+                    msHolder = "";
+                    holderTime = null;
+                    input = Console.ReadLine();
+                    if (input == "d") // the user quit the application
+                    {
+                        running = false;
+                    }
+                    else if (input == "t") // test stuff
+                    {
+                        Console.WriteLine("testing");
+                        this.test1();
+                        running = false;
+                    }
+                    else // the user entered a time
+                    {
+                        //Console.WriteLine(input);
+
+                        foreach (char c in input)
+                        {
+                            if (Char.IsDigit(c)) //checks that c is a number
+                            {
+                                //Console.WriteLine("c is a digit");
+                                if (dotsFound == 0) // no periods, add the number to minutes
+                                {
+                                    minuteHolder = minuteHolder + c;
+                                }
+                                else if (dotsFound == 1) // one period, add the number to seconds
+                                {
+                                    secondHolder = secondHolder + c;
+                                }
+                                else if (dotsFound == 2) // two periods, add the number to milliseconds
+                                {
+                                    msHolder = msHolder + c;
+                                }
+                                else // error, invalid number of periods
+                                {
+                                    Console.WriteLine("error, there can only be exactly 2 periods in an input, quitting");
+                                    running = false;
+                                    break;
+                                }
+                            }
+                            else if (c == '.') // checks if c is a period
+                            {
+                                dotsFound++;
+                                //Console.WriteLine("c is a .");
+                            }
+                            else // c is not a number, program quits due to error
+                            {
+                                Console.WriteLine("c is invalid, quitting");
+                                running = false;
+                                break;
+                            }
+                        }
+
+                        holderTime = new MTime();
+                        holderTime.Minutes = Int32.Parse(minuteHolder);
+                        holderTime.Seconds = Int32.Parse(secondHolder);
+                        holderTime.Milliseconds = Int32.Parse(msHolder);
+
+                        //this line runs and proves that the 3 holders are successfully getting their data
+                        //Console.WriteLine($"Time: {holderTime.Minutes}.{holderTime.Seconds}.{holderTime.Milliseconds}");
+                        totalMs = totalMs + convertToMs(holderTime);
+                        timesArray.Add(holderTime);
+
+                        noOfTimes++;
+                    }
+                }
+            }
+
+            else if (input == "f") // file reading option selected
             {
-                dotsFound = 0;
-                minuteHolder = "";
-                secondHolder = "";
-                msHolder = "";
-                holderTime = null;
-                input = Console.ReadLine();
-                if (input == "d") // the user quit the application
-                {
-                    running = false;
-                }
-                else if (input == "t") // test stuff
-                {
-                    Console.WriteLine("testing");
-                    this.test1();
-                    running = false;
-                }
-                else // the user entered a time
-                {
-                    //Console.WriteLine(input);
+                Console.WriteLine(@"Enter the path to the text file (formatted like 'C:\Users\Guy\Desktop\list.txt'): ");
+                filepath = Console.ReadLine();
+                List<string> fileLinesList = new List<string>();
+                fileLinesList = File.ReadAllLines(filepath).ToList();
 
-                    foreach (char c in input)
+                foreach (String line in fileLinesList)
+                {
+                    dotsFound = 0;
+                    minuteHolder = "";
+                    secondHolder = "";
+                    msHolder = "";
+                    holderTime = null;
+                    
+                    foreach (char c in line)
                     {
                         if (Char.IsDigit(c)) //checks that c is a number
                         {
@@ -66,7 +142,7 @@ namespace MinutesCalculator
                             if (dotsFound == 0) // no periods, add the number to minutes
                             {
                                 minuteHolder = minuteHolder + c;
-                            } 
+                            }
                             else if (dotsFound == 1) // one period, add the number to seconds
                             {
                                 secondHolder = secondHolder + c;
@@ -89,12 +165,12 @@ namespace MinutesCalculator
                         }
                         else // c is not a number, program quits due to error
                         {
-                            Console.WriteLine("c is invalid, quitting");
+                            Console.WriteLine("a character is invalid, quitting");
                             running = false;
                             break;
                         }
                     }
-                    
+
                     holderTime = new MTime();
                     holderTime.Minutes = Int32.Parse(minuteHolder);
                     holderTime.Seconds = Int32.Parse(secondHolder);
@@ -107,6 +183,10 @@ namespace MinutesCalculator
 
                     noOfTimes++;
                 }
+            }
+
+            else {
+                Console.WriteLine("Error: invalid input");
             }
 
             //outputs all times in the list
@@ -170,6 +250,20 @@ namespace MinutesCalculator
         {
             Console.WriteLine("Remainder Test Method");
             Console.WriteLine(18 / 7);
+        }
+
+        public void test3() // learning file IO
+        {
+            //Console.WriteLine("Test 3");
+
+            string filePath1 = @"C:\Users\Jack\Desktop\test\list.txt"; // the @ symbol ignores escape characters
+            List<string> lines = new List<string>();
+            lines = File.ReadAllLines(filePath1).ToList();
+
+            foreach (String line in lines)
+            {
+                Console.WriteLine(line);
+            }
         }
     }
 }
